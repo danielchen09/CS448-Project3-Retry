@@ -7,6 +7,12 @@ public class LockTableTimeout extends LockTable {
     @Override
     public synchronized void sLock(Transaction transaction, BlockId blk)  {
         try {
+            if (isHolding(transaction, blk)) {
+                // upgrade
+                locktype.put(blk, 1);
+                return;
+            }
+
             long timestamp = System.currentTimeMillis();
             while (hasXlock(blk) && !waitingTooLong(timestamp))
                 wait(MAX_TIME);
@@ -22,6 +28,12 @@ public class LockTableTimeout extends LockTable {
     @Override
     public synchronized void xLock(Transaction transaction, BlockId blk) {
         try {
+            if (isHolding(transaction, blk)) {
+                // downgrade
+                locktype.put(blk, -1);
+                return;
+            }
+
             long timestamp = System.currentTimeMillis();
             while (hasOtherSLocks(blk) && !waitingTooLong(timestamp))
                 wait(MAX_TIME);

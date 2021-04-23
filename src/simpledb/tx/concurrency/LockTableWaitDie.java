@@ -52,7 +52,7 @@ public class LockTableWaitDie extends LockTable {
 
             // if transaction is itself holding, downgrade
             if (isHolding(transaction, blk) && locks.get(blk).size() == 1) {
-                locktype.put(blk, 1);
+                locktype.put(blk, -1);
                 // notify so other pending S locks can be granted
                 notifyAll();
                 return;

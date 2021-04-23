@@ -16,7 +16,7 @@ import simpledb.tx.Transaction;
  * @author Edward Sciore
  */
 public abstract class LockTable {
-   public static final long MAX_TIME = 10000; // 10 seconds
+   public static final long MAX_TIME = 3000; // 10 seconds
    
    protected Map<BlockId, List<Transaction>> locks = new HashMap<>();
    protected Map<BlockId, Integer> locktype = new HashMap<>(); // 0: no lock, 1: s locks, -1: x lock
@@ -52,6 +52,8 @@ public abstract class LockTable {
    }
 
    protected List<Transaction> getYounger(Transaction transaction, BlockId blk) {
+      if (locks.get(blk) == null)
+         return null;
       List<Transaction> younger = new ArrayList<>();
       for (Transaction t : locks.get(blk)) {
          if (t.txnum > transaction.txnum)
@@ -61,6 +63,8 @@ public abstract class LockTable {
    }
 
    protected boolean isHolding(Transaction transaction, BlockId blk) {
+      if (locks.get(blk) == null)
+         return false;
       for (Transaction t : locks.get(blk))
          if (t.txnum == transaction.txnum)
             return true;
@@ -68,6 +72,8 @@ public abstract class LockTable {
    }
 
    protected boolean hasOlder(Transaction transaction, BlockId blk) {
+      if (locks.get(blk) == null)
+         return false;
       for (Transaction t : locks.get(blk))
          if (t.txnum < transaction.txnum)
             return true;

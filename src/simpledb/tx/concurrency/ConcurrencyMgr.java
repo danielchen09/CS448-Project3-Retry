@@ -28,7 +28,8 @@ public class ConcurrencyMgr {
     * @param blk a reference to the disk block
     */
    public void sLock(Transaction transaction, BlockId blk) {
-      if (locks.get(blk) == null) {
+      if (!hasLock(blk, "S")) {
+//         System.out.println(transaction.txnum + " request S lock " + blk);
          locktbl.sLock(transaction, blk);
          locks.put(blk, "S");
       }
@@ -42,7 +43,8 @@ public class ConcurrencyMgr {
     * @param blk a reference to the disk block
     */
    public void xLock(Transaction transaction, BlockId blk) {
-      if (!hasXLock(blk)) {
+      if (!hasLock(blk, "X")) {
+//         System.out.println(transaction.txnum + " request X lock " + blk);
          locktbl.xLock(transaction, blk);
          locks.put(blk, "X");
       }
@@ -58,8 +60,8 @@ public class ConcurrencyMgr {
       locks.clear();
    }
 
-   private boolean hasXLock(BlockId blk) {
+   private boolean hasLock(BlockId blk, String type) {
       String locktype = locks.get(blk);
-      return locktype != null && locktype.equals("X");
+      return locktype != null && locktype.equals(type);
    }
 }

@@ -6,6 +6,8 @@ import simpledb.buffer.*;
 import simpledb.tx.recovery.*;
 import simpledb.tx.concurrency.ConcurrencyMgr;
 
+import java.util.Currency;
+
 /**
  * Provide transaction management for clients,
  * ensuring that all transactions are serializable, recoverable,
@@ -21,6 +23,8 @@ public class Transaction {
    private FileMgr fm;
    public int txnum;
    private BufferList mybuffers;
+
+   public Thread thread;
    
    /**
     * Create a new transaction and its associated 
@@ -39,8 +43,18 @@ public class Transaction {
       recoveryMgr = new RecoveryMgr(this, txnum, lm, bm);
       concurMgr   = new ConcurrencyMgr();
       mybuffers = new BufferList(bm);
+      this.thread = Thread.currentThread();
    }
-   
+
+   public void abort() {
+      this.thread.interrupt();
+   }
+
+   public void release() {
+      concurMgr.release(this);
+      mybuffers.unpinAll();
+   }
+
    /**
     * Commit the current transaction.
     * Flush all modified buffers (and their log records),
