@@ -19,7 +19,7 @@ public class Transaction {
    private ConcurrencyMgr concurMgr;
    private BufferMgr bm;
    private FileMgr fm;
-   private int txnum;
+   public int txnum;
    private BufferList mybuffers;
    
    /**
