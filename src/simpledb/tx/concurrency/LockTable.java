@@ -74,6 +74,10 @@ public abstract class LockTable {
       return false;
    }
 
+   protected boolean hasLock(BlockId blk) {
+      return locktype.containsKey(blk) && locktype.get(blk) != 0;
+   }
+
    protected boolean hasXlock(BlockId blk) {
       return locktype.containsKey(blk) && locktype.get(blk) == -1;
    }

@@ -18,7 +18,7 @@ public class ConcurrencyMgr {
     * The global lock table. This variable is static because 
     * all transactions share the same table.
     */
-   private static LockTable locktbl = new LockTableTimeout();
+   private static LockTable locktbl = new LockTableWaitDie();
    private Map<BlockId,String> locks  = new HashMap<BlockId,String>();
 
    /**
