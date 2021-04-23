@@ -2,6 +2,7 @@ package simpledb.tx.concurrency;
 
 import java.util.*;
 import simpledb.file.BlockId;
+import simpledb.tx.Transaction;
 
 /**
  * The lock table, which provides methods to lock and unlock blocks.
@@ -14,90 +15,47 @@ import simpledb.file.BlockId;
  * is still locked, it will place itself back on the wait list.
  * @author Edward Sciore
  */
-class LockTable {
-   private static final long MAX_TIME = 10000; // 10 seconds
+public abstract class LockTable {
+   public static final long MAX_TIME = 10000; // 10 seconds
    
-   private Map<BlockId,Integer> locks = new HashMap<BlockId,Integer>();
-   
-   /**
-    * Grant an SLock on the specified block.
-    * If an XLock exists when the method is called,
-    * then the calling thread will be placed on a wait list
-    * until the lock is released.
-    * If the thread remains on the wait list for a certain 
-    * amount of time (currently 10 seconds),
-    * then an exception is thrown.
-    * @param blk a reference to the disk block
-    */
-   public synchronized void sLock(BlockId blk) {
-      try {
-         long timestamp = System.currentTimeMillis();
-         while (hasXlock(blk) && !waitingTooLong(timestamp))
-            wait(MAX_TIME);
-         if (hasXlock(blk))
-            throw new LockAbortException();
-         int val = getLockVal(blk);  // will not be negative
-         locks.put(blk, val+1);
+   protected Map<BlockId, List<Transaction>> locks = new HashMap<>();
+   protected int locktype = 0; // 0: no lock, 1: s locks, -1: x lock
+
+   public abstract void sLock(Transaction transaction, BlockId blk);
+   public abstract void xLock(Transaction transaction, BlockId blk);
+
+   protected synchronized void grantLock(Transaction transaction, BlockId blk, int locktype) {
+      if (!locks.containsKey(blk)) {
+         locks.put(blk, new ArrayList<>());
       }
-      catch(InterruptedException e) {
-         throw new LockAbortException();
-      }
+      locks.get(blk).add(transaction);
+      this.locktype = locktype;
    }
-   
-   /**
-    * Grant an XLock on the specified block.
-    * If a lock of any type exists when the method is called,
-    * then the calling thread will be placed on a wait list
-    * until the locks are released.
-    * If the thread remains on the wait list for a certain 
-    * amount of time (currently 10 seconds),
-    * then an exception is thrown.
-    * @param blk a reference to the disk block
-    */
-   synchronized void xLock(BlockId blk) {
-      try {
-         long timestamp = System.currentTimeMillis();
-         while (hasOtherSLocks(blk) && !waitingTooLong(timestamp))
-            wait(MAX_TIME);
-         if (hasOtherSLocks(blk))
-            throw new LockAbortException();
-         locks.put(blk, -1);
+
+   synchronized void unlock(Transaction transaction, BlockId blk) {
+      if (!locks.containsKey(blk) || locks.get(blk).size() == 0)
+         return;
+
+      Iterator<Transaction> it = locks.get(blk).iterator();
+      while (it.hasNext()) {
+         Transaction t = it.next();
+         if (t.equals(transaction))
+            it.remove();
       }
-      catch(InterruptedException e) {
-         throw new LockAbortException();
-      }
-   }
-   
-   /**
-    * Release a lock on the specified block.
-    * If this lock is the last lock on that block,
-    * then the waiting transactions are notified.
-    * @param blk a reference to the disk block
-    */
-   synchronized void unlock(BlockId blk) {
-      int val = getLockVal(blk);
-      if (val > 1)
-         locks.put(blk, val-1);
-      else {
+
+      if (locks.get(blk).size() == 0) {
+         // no locks, others can be granted
          locks.remove(blk);
+         locktype = 0;
          notifyAll();
       }
    }
-   
-   private boolean hasXlock(BlockId blk) {
-      return getLockVal(blk) < 0;
+
+   protected boolean hasXlock(BlockId blk) {
+      return locktype == -1;
    }
    
-   private boolean hasOtherSLocks(BlockId blk) {
-      return getLockVal(blk) > 1;
-   }
-   
-   private boolean waitingTooLong(long starttime) {
-      return System.currentTimeMillis() - starttime > MAX_TIME;
-   }
-   
-   private int getLockVal(BlockId blk) {
-      Integer ival = locks.get(blk);
-      return (ival == null) ? 0 : ival.intValue();
+   protected boolean hasOtherSLocks(BlockId blk) {
+      return locktype == 1;
    }
 }
