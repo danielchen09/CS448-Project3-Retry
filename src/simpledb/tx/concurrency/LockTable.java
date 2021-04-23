@@ -19,17 +19,17 @@ public abstract class LockTable {
    public static final long MAX_TIME = 10000; // 10 seconds
    
    protected Map<BlockId, List<Transaction>> locks = new HashMap<>();
-   protected int locktype = 0; // 0: no lock, 1: s locks, -1: x lock
+   protected Map<BlockId, Integer> locktype = new HashMap<>(); // 0: no lock, 1: s locks, -1: x lock
 
    public abstract void sLock(Transaction transaction, BlockId blk);
    public abstract void xLock(Transaction transaction, BlockId blk);
 
-   protected synchronized void grantLock(Transaction transaction, BlockId blk, int locktype) {
+   protected synchronized void grantLock(Transaction transaction, BlockId blk, int type) {
       if (!locks.containsKey(blk)) {
          locks.put(blk, new ArrayList<>());
       }
       locks.get(blk).add(transaction);
-      this.locktype = locktype;
+      locktype.put(blk, type);
    }
 
    synchronized void unlock(Transaction transaction, BlockId blk) {
@@ -46,16 +46,39 @@ public abstract class LockTable {
       if (locks.get(blk).size() == 0) {
          // no locks, others can be granted
          locks.remove(blk);
-         locktype = 0;
+         locktype.put(blk, 0);
          notifyAll();
       }
    }
 
+   protected List<Transaction> getYounger(Transaction transaction, BlockId blk) {
+      List<Transaction> younger = new ArrayList<>();
+      for (Transaction t : locks.get(blk)) {
+         if (t.txnum > transaction.txnum)
+            younger.add(t);
+      }
+      return younger;
+   }
+
+   protected boolean isHolding(Transaction transaction, BlockId blk) {
+      for (Transaction t : locks.get(blk))
+         if (t.txnum == transaction.txnum)
+            return true;
+      return false;
+   }
+
+   protected boolean hasOlder(Transaction transaction, BlockId blk) {
+      for (Transaction t : locks.get(blk))
+         if (t.txnum < transaction.txnum)
+            return true;
+      return false;
+   }
+
    protected boolean hasXlock(BlockId blk) {
-      return locktype == -1;
+      return locktype.containsKey(blk) && locktype.get(blk) == -1;
    }
    
    protected boolean hasOtherSLocks(BlockId blk) {
-      return locktype == 1;
+      return locktype.containsKey(blk) && locktype.get(blk) == 1;
    }
 }
