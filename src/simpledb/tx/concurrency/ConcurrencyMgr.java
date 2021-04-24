@@ -28,7 +28,7 @@ public class ConcurrencyMgr {
     * @param blk a reference to the disk block
     */
    public void sLock(Transaction transaction, BlockId blk) {
-      if (!hasLock(blk, "S")) {
+      if (!hasLock(blk, "S") && !hasLock(blk, "X")) {
 //         System.out.println(transaction.txnum + " request S lock " + blk);
          locktbl.sLock(transaction, blk);
          locks.put(blk, "S");

@@ -8,7 +8,7 @@ import simpledb.server.SimpleDB;
 public class QueryTest {
     public static SimpleDB db;
 
-    public static int RECORDS = 400;
+    public static int RECORDS = 200;
     public static int RESTART_DELAY = 10; // ms
 
     public static void main(String[] args) throws InterruptedException {
@@ -58,13 +58,14 @@ public class QueryTest {
             } catch (Exception ex) {
                 System.out.println("restarting " + ex);
                 tx1.release();
-                try {
-                    Thread.sleep(RESTART_DELAY);
-                    Thread child = new Thread(new T1());
-                    child.start();
-                    child.join();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                while (true) {
+                    try {
+                        Thread child = new Thread(new T1());
+                        Thread.sleep(RESTART_DELAY);
+                        child.start();
+                        child.join();
+                        break;
+                    } catch (Exception e) {}
                 }
             }
         }
@@ -72,14 +73,22 @@ public class QueryTest {
 
     static class T2 implements Runnable {
         private int a;
+        private int txnum = -1;
 
         public T2(int a) {
             this.a = a;
         }
 
+        public T2(int a, int txnum) {
+            this.a = a;
+            this.txnum = txnum;
+        }
+
         @Override
         public void run() {
             Transaction tx2 = db.newTx();
+            if (txnum != -1)
+                tx2.setTxNum(txnum);
             try {
                 String upd = "update T1 set A=1 where A=" + a;
                 db.planner().executeUpdate(upd, tx2);
@@ -87,13 +96,14 @@ public class QueryTest {
             } catch (Exception ex) {
                 System.out.println("restarting " + ex);
                 tx2.release();
-                try {
-                    Thread.sleep(RESTART_DELAY);
-                    Thread child = new Thread(new T2(a));
-                    child.start();
-                    child.join();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                while (true) {
+                    try {
+                        Thread child = new Thread(new T2(a, tx2.txnum));
+                        Thread.sleep(RESTART_DELAY);
+                        child.start();
+                        child.join();
+                        break;
+                    } catch (Exception e) {}
                 }
             }
         }

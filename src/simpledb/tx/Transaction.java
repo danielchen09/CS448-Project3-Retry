@@ -46,6 +46,10 @@ public class Transaction {
       this.thread = Thread.currentThread();
    }
 
+   public void setTxNum(int txnum) {
+      this.txnum = txnum;
+   }
+
    public void abort() {
       this.thread.interrupt();
    }

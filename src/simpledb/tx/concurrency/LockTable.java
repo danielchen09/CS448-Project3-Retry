@@ -25,14 +25,14 @@ public abstract class LockTable {
    public abstract void xLock(Transaction transaction, BlockId blk);
 
    protected synchronized void grantLock(Transaction transaction, BlockId blk, int type) {
-      if (!locks.containsKey(blk)) {
+      if (!locks.containsKey(blk))
          locks.put(blk, new ArrayList<>());
-      }
       locks.get(blk).add(transaction);
       locktype.put(blk, type);
    }
 
    synchronized void unlock(Transaction transaction, BlockId blk) {
+//      System.out.println(transaction.txnum + " unlock " + blk);
       if (!locks.containsKey(blk) || locks.get(blk).size() == 0)
          return;
 

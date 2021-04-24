@@ -26,6 +26,8 @@ public class SimpleDB {
    private  MetadataMgr mdm;
    private  Planner planner;
 
+   private String dirname;
+
    /**
     * A constructor useful for debugging.
     * @param dirname the name of the database directory
@@ -33,6 +35,7 @@ public class SimpleDB {
     * @param buffsize the number of buffers
     */
    public SimpleDB(String dirname, int blocksize, int buffsize) {
+      this.dirname = dirname;
       File dbDirectory = new File(dirname);
       fm = new FileMgr(dbDirectory, blocksize);
       lm = new LogMgr(fm, LOG_FILE);
@@ -68,6 +71,11 @@ public class SimpleDB {
     * and access the metadata.
     */
    public Transaction newTx() {
+      this.dirname = dirname;
+      File dbDirectory = new File(dirname);
+      FileMgr fm = new FileMgr(dbDirectory, BLOCK_SIZE);
+      LogMgr lm = new LogMgr(fm, LOG_FILE);
+      BufferMgr bm = new BufferMgr(fm, lm, BUFFER_SIZE);
       return new Transaction(fm, lm, bm);
    }
    
