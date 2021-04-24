@@ -92,7 +92,7 @@ public class LockTableGraph extends LockTable {
     WaitForGraph waitForGraph = new WaitForGraph();
 
     @Override
-    public void sLock(Transaction transaction, BlockId blk) {
+    public synchronized void sLock(Transaction transaction, BlockId blk) {
         try {
 //            System.out.println(transaction.txnum + " request S " + blk);
             if (!hasLock(blk) || hasOtherSLocks(blk)) {
@@ -117,7 +117,7 @@ public class LockTableGraph extends LockTable {
     }
 
     @Override
-    public void xLock(Transaction transaction, BlockId blk) {
+    public synchronized void xLock(Transaction transaction, BlockId blk) {
         try {
 //            System.out.println(transaction.txnum + " request X " + blk);
             if (!hasLock(blk)) {
