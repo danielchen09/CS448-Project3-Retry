@@ -33,6 +33,7 @@ public abstract class LockTable {
 
    synchronized void unlock(Transaction transaction, BlockId blk) {
 //      System.out.println(transaction.txnum + " unlock " + blk);
+      unlockHandler(transaction, blk);
       if (!locks.containsKey(blk) || locks.get(blk).size() == 0)
          return;
 
@@ -49,6 +50,10 @@ public abstract class LockTable {
          locktype.put(blk, 0);
          notifyAll();
       }
+   }
+
+   protected void unlockHandler(Transaction transaction, BlockId blk) {
+
    }
 
    protected List<Transaction> getYounger(Transaction transaction, BlockId blk) {
