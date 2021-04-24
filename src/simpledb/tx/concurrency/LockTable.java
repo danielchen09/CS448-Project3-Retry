@@ -16,7 +16,7 @@ import simpledb.tx.Transaction;
  * @author Edward Sciore
  */
 public abstract class LockTable {
-   public static final long MAX_TIME = 3000; // 10 seconds
+   public static long MAX_TIME = 3000; // 10 seconds
    
    protected Map<BlockId, List<Transaction>> locks = new HashMap<>();
    protected Map<BlockId, Integer> locktype = new HashMap<>(); // 0: no lock, 1: s locks, -1: x lock

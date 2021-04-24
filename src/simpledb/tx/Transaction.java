@@ -15,6 +15,8 @@ import java.util.Currency;
  * @author Edward Sciore
  */
 public class Transaction {
+   public static boolean VERBOSE = true;
+
    private static int nextTxNum = 0;
    private static final int END_OF_FILE = -1;
    private RecoveryMgr    recoveryMgr;
@@ -55,6 +57,7 @@ public class Transaction {
    }
 
    public void release() {
+      fm.closeAll();
       concurMgr.release(this);
       mybuffers.unpinAll();
    }
@@ -67,9 +70,11 @@ public class Transaction {
     */
    public void commit() {
       recoveryMgr.commit();
-      System.out.println("transaction " + txnum + " committed");
+      if (VERBOSE)
+         System.out.println("transaction " + txnum + " committed");
       concurMgr.release(this);
       mybuffers.unpinAll();
+      fm.closeAll();
    }
    
    /**
@@ -81,7 +86,8 @@ public class Transaction {
     */
    public void rollback() {
       recoveryMgr.rollback();
-      System.out.println("transaction " + txnum + " rolled back");
+      if (VERBOSE)
+         System.out.println("transaction " + txnum + " rolled back");
       concurMgr.release(this);
       mybuffers.unpinAll();
    }

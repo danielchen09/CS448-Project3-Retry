@@ -88,4 +88,14 @@ public class FileMgr {
       }
       return f;
    }
+
+   public void closeAll(){
+      for (RandomAccessFile f : openFiles.values()) {
+         try {
+            f.close();
+         } catch (IOException e) {
+            e.printStackTrace();
+         }
+      }
+   }
 }

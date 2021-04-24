@@ -16,6 +16,8 @@ import simpledb.opt.HeuristicQueryPlanner;
  * @author Edward Sciore
  */
 public class SimpleDB {
+   public static boolean VERBOSE = true;
+
    public static int BLOCK_SIZE = 400;
    public static int BUFFER_SIZE = 8;
    public static String LOG_FILE = "simpledb.log";
@@ -51,10 +53,12 @@ public class SimpleDB {
       this(dirname, BLOCK_SIZE, BUFFER_SIZE); 
       Transaction tx = newTx();
       boolean isnew = fm.isNew();
-      if (isnew)
-         System.out.println("creating new database");
-      else {
-         System.out.println("recovering existing database");
+      if (isnew) {
+         if (VERBOSE)
+            System.out.println("creating new database");
+      } else {
+         if (VERBOSE)
+            System.out.println("recovering existing database");
          tx.recover();
       }
       mdm = new MetadataMgr(isnew, tx);
