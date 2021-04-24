@@ -4,6 +4,10 @@ import simpledb.buffer.BufferMgr;
 import simpledb.file.*;
 import simpledb.log.LogMgr;
 import simpledb.server.SimpleDB;
+import simpledb.tx.concurrency.ConcurrencyMgr;
+import simpledb.tx.concurrency.LockTableTimeout;
+import simpledb.tx.concurrency.LockTableWaitDie;
+import simpledb.tx.concurrency.LockTableWoundWait;
 
 public class ConcurrencyTest {
    private static FileMgr fm;
@@ -12,7 +16,7 @@ public class ConcurrencyTest {
 
    public static void main(String[] args) {
       //initialize the database system
-      SimpleDB db = new SimpleDB("concurrencytest", 400, 8); 
+      SimpleDB db = new SimpleDB("concurrencytest", 400, 8);
       fm = db.fileMgr();
       lm = db.logMgr();
       bm = db.bufferMgr();

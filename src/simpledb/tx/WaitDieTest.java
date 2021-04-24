@@ -5,16 +5,38 @@ import simpledb.file.*;
 import simpledb.log.LogMgr;
 import simpledb.server.SimpleDB;
 import simpledb.tx.Transaction;
-import simpledb.tx.concurrency.LockAbortException;
+import simpledb.tx.concurrency.*;
+
+import java.io.File;
+import java.io.IOException;
 
 public class WaitDieTest {
    private static FileMgr fm;
    private static LogMgr lm;
    private static BufferMgr bm;
 
-   public static void main(String[] args) {
+   public static void delete(File f) throws IOException {
+      if (!f.exists())
+         return;
+      if (f.isDirectory()) {
+         for (File ff : f.listFiles())
+            delete(ff);
+      }
+      if (!f.delete()) {
+         System.out.println("not deleted");
+         throw new IOException();
+      }
+   }
+
+   public static void main(String[] args) throws IOException {
       //initialize the database system
-      SimpleDB db = new SimpleDB("waitdietest", 400, 8); 
+      String filename = "waitdietest";
+      delete(new File(filename));
+      SimpleDB db = new SimpleDB(filename, 400, 8);
+
+      // change this to the implementation to be tested
+      ConcurrencyMgr.locktbl = new LockTableWaitDie();
+
       fm = db.fileMgr();
       lm = db.logMgr();
       bm = db.bufferMgr();
@@ -28,7 +50,7 @@ public class WaitDieTest {
          Transaction txA = null;
          try {
             txA = new Transaction(fm, lm, bm);
-            System.out.println("Transaction A starts");
+            System.out.printf("Transaction A(%d) starts\n", txA.txnum);
             BlockId blk1 = new BlockId("testfile", 1);
             BlockId blk2 = new BlockId("testfile", 2);
             txA.pin(blk1);
@@ -57,7 +79,7 @@ public class WaitDieTest {
          try {
             Thread.sleep(300);
             txB = new Transaction(fm, lm, bm);
-            System.out.println("Transaction B starts");
+            System.out.printf("Transaction B(%d) starts\n", txB.txnum);
             BlockId blk1 = new BlockId("testfile", 1);
             BlockId blk2 = new BlockId("testfile", 2);
             txB.pin(blk1);
@@ -72,8 +94,7 @@ public class WaitDieTest {
             txB.commit();
             System.out.println("Transaction B commits");
          }
-         catch(InterruptedException e) {}
-         catch(LockAbortException e) {
+         catch(InterruptedException | LockAbortException e) {
             System.out.println("Transaction B aborts");
             txB.rollback();
          }
@@ -86,7 +107,7 @@ public class WaitDieTest {
          try {
             Thread.sleep(600);
             txC = new Transaction(fm, lm, bm);
-            System.out.println("Transaction C starts");
+            System.out.printf("Transaction C(%d) starts\n", txC.txnum);
             BlockId blk1 = new BlockId("testfile", 1);
             BlockId blk2 = new BlockId("testfile", 2);
             txC.pin(blk1);
@@ -105,8 +126,7 @@ public class WaitDieTest {
             txC.commit();
             System.out.println("Transaction C commits");
          }
-         catch(InterruptedException e) {}
-         catch(LockAbortException e) {
+         catch(InterruptedException | LockAbortException e) {
             System.out.println("Transaction C aborts");
             txC.rollback();
          }

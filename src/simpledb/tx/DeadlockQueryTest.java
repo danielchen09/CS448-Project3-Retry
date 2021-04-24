@@ -12,7 +12,6 @@ import java.io.IOException;
 public class DeadlockQueryTest {
     public static SimpleDB db;
 
-    public static int RECORDS = 200;
     public static int RESTART_DELAY = 10; // ms
 
     public static void delete(File f) throws IOException {
@@ -32,6 +31,8 @@ public class DeadlockQueryTest {
         String filename = "deadlockquerytest";
         delete(new File(filename));
         db = new SimpleDB(filename);
+
+        // change this to the implementation that needs to be tested
         ConcurrencyMgr.locktbl = new LockTableTimeout();
 
         Transaction tx = db.newTx();

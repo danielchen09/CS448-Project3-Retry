@@ -37,7 +37,7 @@ public class LockTableWoundWait extends LockTable {
     }
 
     @Override
-    public void xLock(Transaction transaction, BlockId blk) {
+    public synchronized void xLock(Transaction transaction, BlockId blk) {
         try {
             if (!hasLock(blk)) {
                 grantLock(transaction, blk, -1);
