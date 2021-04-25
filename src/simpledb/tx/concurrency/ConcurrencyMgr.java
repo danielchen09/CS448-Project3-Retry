@@ -2,6 +2,7 @@ package simpledb.tx.concurrency;
 
 import java.util.*;
 import simpledb.file.BlockId;
+import simpledb.tx.Transaction;
 
 /**
  * The concurrency manager for the transaction.
@@ -17,7 +18,7 @@ public class ConcurrencyMgr {
     * The global lock table. This variable is static because 
     * all transactions share the same table.
     */
-   private static LockTable locktbl = new LockTable();
+   public static LockTable locktbl = new LockTableGraph();
    private Map<BlockId,String> locks  = new HashMap<BlockId,String>();
 
    /**
@@ -26,9 +27,10 @@ public class ConcurrencyMgr {
     * if the transaction currently has no locks on that block.
     * @param blk a reference to the disk block
     */
-   public void sLock(BlockId blk) {
-      if (locks.get(blk) == null) {
-         locktbl.sLock(blk);
+   public void sLock(Transaction transaction, BlockId blk) {
+      if (!hasLock(blk, "S") && !hasLock(blk, "X")) {
+//         System.out.println(transaction.txnum + " request S lock " + blk);
+         locktbl.sLock(transaction, blk);
          locks.put(blk, "S");
       }
    }
@@ -40,10 +42,10 @@ public class ConcurrencyMgr {
     * (if necessary), and then upgrades it to an XLock.
     * @param blk a reference to the disk block
     */
-   public void xLock(BlockId blk) {
-      if (!hasXLock(blk)) {
-         sLock(blk);
-         locktbl.xLock(blk);
+   public void xLock(Transaction transaction, BlockId blk) {
+      if (!hasLock(blk, "X")) {
+//         System.out.println(transaction.txnum + " request X lock " + blk);
+         locktbl.xLock(transaction, blk);
          locks.put(blk, "X");
       }
    }
@@ -52,14 +54,14 @@ public class ConcurrencyMgr {
     * Release all locks by asking the lock table to
     * unlock each one.
     */
-   public void release() {
+   public void release(Transaction transaction) {
       for (BlockId blk : locks.keySet()) 
-         locktbl.unlock(blk);
+         locktbl.unlock(transaction, blk);
       locks.clear();
    }
 
-   private boolean hasXLock(BlockId blk) {
+   private boolean hasLock(BlockId blk, String type) {
       String locktype = locks.get(blk);
-      return locktype != null && locktype.equals("X");
+      return locktype != null && locktype.equals(type);
    }
 }
