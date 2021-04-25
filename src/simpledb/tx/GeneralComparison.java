@@ -37,7 +37,7 @@ public class GeneralComparison {
         Transaction.VERBOSE = false;
 
         LockTable.MAX_TIME = 1;
-        test2();
+        test4();
     }
 
     public static void test1() throws IOException, InterruptedException {
@@ -63,14 +63,53 @@ public class GeneralComparison {
 
         PrintWriter pw = new PrintWriter(new FileOutputStream(filename, false));
         for (LockTable.LockTableType type : LockTable.LockTableType.values()) {
-            for (int i = 100; i <= RECORDS; i+=500) {
+            for (int i = 100; i <= RECORDS; i+=200) {
                 System.out.println(i);
                 N_WRITES = i;
                 int psum = 0;
-                for (int j = 0; j < 5; j++) {
+                for (int j = 0; j < 1; j++) {
                     psum += runTest(type);
                 }
-                pw.println(i + " " + (psum / 5.0));
+                pw.println(i + " " + (psum / 1.0));
+            }
+        }
+        pw.flush();
+    }
+
+    public static void test3() throws IOException, InterruptedException {
+        String filename = "general-out/out3.txt";
+
+        RECORDS = 2000;
+
+        PrintWriter pw = new PrintWriter(new FileOutputStream(filename, false));
+        for (LockTable.LockTableType type : LockTable.LockTableType.values()) {
+            for (int i = 5; i <= 500; i+=50) {
+                System.out.println(i);
+                N_WRITES = i;
+                int psum = 0;
+                for (int j = 0; j < 1; j++) {
+                    psum += runTest(type);
+                }
+                pw.println(i + " " + (psum / 1.0));
+            }
+        }
+        pw.flush();
+    }
+
+    public static void test4() throws IOException, InterruptedException {
+        String filename = "general-out/out4.txt";
+
+        PrintWriter pw = new PrintWriter(new FileOutputStream(filename, false));
+        for (LockTable.LockTableType type : LockTable.LockTableType.values()) {
+            for (int i = 5; i <= 2000; i+=50) {
+                System.out.println(i);
+                RECORDS = i;
+                N_WRITES = RECORDS;
+                int psum = 0;
+                for (int j = 0; j < 1; j++) {
+                    psum += runTest(type);
+                }
+                pw.println(i + " " + (psum / 1.0));
             }
         }
         pw.flush();
