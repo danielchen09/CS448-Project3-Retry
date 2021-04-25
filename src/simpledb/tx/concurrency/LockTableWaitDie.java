@@ -13,6 +13,7 @@ public class LockTableWaitDie extends LockTable {
             // already has slock on block, or no lock at all
             if (!hasLock(blk) || hasOtherSLocks(blk)) {
                 grantLock(transaction, blk, 1);
+                notifyAll();
                 return;
             }
 
@@ -23,6 +24,7 @@ public class LockTableWaitDie extends LockTable {
             // if the transaction already has an X lock, downgrade
             if (isHolding(transaction, blk)) {
                 locktype.put(blk, 1);
+                notifyAll();
                 return;
             }
 
@@ -53,8 +55,6 @@ public class LockTableWaitDie extends LockTable {
             // if transaction is itself holding, downgrade
             if (isHolding(transaction, blk) && locks.get(blk).size() == 1) {
                 locktype.put(blk, -1);
-                // notify so other pending S locks can be granted
-                notifyAll();
                 return;
             }
 

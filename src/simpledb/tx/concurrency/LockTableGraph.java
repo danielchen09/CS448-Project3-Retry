@@ -98,11 +98,13 @@ public class LockTableGraph extends LockTable {
             if (!hasLock(blk) || hasOtherSLocks(blk)) {
                 grantLock(transaction, blk, 1);
 //                System.out.println(transaction.txnum + " got S " + blk);
+                notifyAll();
                 return;
             }
             if (isHolding(transaction, blk)) {
 //                System.out.println("downgrade");
                 locktype.put(blk, 1);
+                notifyAll();
                 return;
             }
             waitForGraph.waitFor(transaction, locks.get(blk));
@@ -125,7 +127,7 @@ public class LockTableGraph extends LockTable {
 //                System.out.println(transaction.txnum + " got X " + blk);
                 return;
             }
-            if (isHolding(transaction, blk)) {
+            if (isHolding(transaction, blk) && locks.get(blk).size() == 1) {
 //                System.out.println("upgrade");
                 locktype.put(blk, -1);
                 return;

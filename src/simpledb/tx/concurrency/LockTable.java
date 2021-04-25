@@ -16,6 +16,26 @@ import simpledb.tx.Transaction;
  * @author Edward Sciore
  */
 public abstract class LockTable {
+   public enum LockTableType {
+      WAIT_DIE,
+      WOUND_WAIT,
+      GRAPH,
+      TIMEOUT
+   }
+   public static LockTable getLockTable(LockTable.LockTableType type) {
+      switch (type) {
+         case WAIT_DIE:
+            return new LockTableWaitDie();
+         case WOUND_WAIT:
+            return new LockTableWoundWait();
+         case GRAPH:
+            return new LockTableGraph();
+         case TIMEOUT:
+            return new LockTableTimeout();
+      }
+      return null;
+   }
+
    public static long MAX_TIME = 3000; // 10 seconds
    
    protected Map<BlockId, List<Transaction>> locks = new HashMap<>();
