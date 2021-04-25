@@ -29,3 +29,12 @@
 - How to run this test
     - change line 36 to the implementation that needs to be tested
     
+### `DeadlockQueryComparison`
+- this is for generating the test output of option 1
+- how to run
+    - call test1()~test7() in the main function to generate the output files
+
+### `GeneralComparison`
+- this is for generating the test output of task 5
+- how to run
+    - call test1()~test4() in tthe main function
